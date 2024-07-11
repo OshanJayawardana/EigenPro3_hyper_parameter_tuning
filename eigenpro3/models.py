@@ -1,4 +1,5 @@
-import torch, time
+import torch
+import time
 from .utils import fmm, accuracy, divide_to_gpus, bottomrule, midrule 
 from .utils.svd import nystrom_kernel_svd
 from .datasets import makedataloaders
@@ -40,7 +41,7 @@ class KernelModel():
         
         ###### DATA Preconditioner
         ##### note that batch size and learning rate will be determined in this stage #########
-        if nystrom_samples==None:
+        if nystrom_samples is None:
             ####### randomly select nystrom samples from X
             nystrom_ids = torch.randperm(X.shape[0])[:n_nystrom_samples]
             self.nystrom_samples = X[nystrom_ids]
@@ -77,7 +78,7 @@ class KernelModel():
         for t in range(epochs):
             self.epoch = t
             self.fit_epoch(train_loaders)
-            if val_loader!=None and score_fn!=None:
+            if val_loader is not None and score_fn is not None:
                 accu = score_fn(self.weights,self.centers,val_loader,self.kernel,self.device_base)
                 print(midrule)
                 print(f'epoch {t+1:4d}        validation accuracy: {accu*100.:5.2f}%')
@@ -183,6 +184,7 @@ class KernelModel():
         D_x = (1 - tail_eig_x / Lam_x) / Lam_x / nystrom_size
 
         batch_size = int(beta / tail_eig_x)
+        learning_rate_prefactor = 1.0  # Define the value of learning_rate_prefactor
         if batch_size < beta / tail_eig_x + 1:
             lr = batch_size / beta / (2)
         else:
